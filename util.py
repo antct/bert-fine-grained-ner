@@ -95,3 +95,55 @@ class CoNLLDataset(data.Dataset):
         labels = torch.LongTensor(labels)
 
         return input_ids, segment_ids, input_mask, input_char_ids, heads, labels
+
+def CoNLLInput(sent):
+    words = sent.split()
+    xs, chars, heads = [], [], []
+    for word in words:
+        x = tokenizer.tokenize(word)
+        if not len(x):
+            continue
+        head = [1] + [0] * (len(x) - 1)
+        char = [[CHAR_DICT[i] for i in token] for token in x]
+        assert len(x) == len(head) == len(char)
+        if len(xs) + len(x) >= args.bert_max_len - 2:
+            break
+        xs.extend(x)
+        heads.extend(head)
+        chars.extend(char)
+
+    input_tokens = ['[CLS]'] + xs + ['[SEP]']
+    input_char_ids = [[0]] + chars + [[0]]
+    input_ids = tokenizer.convert_tokens_to_ids(input_tokens)
+    heads = [0] + heads + [0]
+
+    segment_ids = [0] * len(input_ids)
+    input_mask = [1] * len(input_ids)
+
+    assert len(input_ids) == len(segment_ids) == len(input_mask) == len(heads)
+
+    padding = [0] * (args.bert_max_len - len(input_ids))
+
+    input_ids += padding
+    segment_ids += padding
+    input_mask += padding
+    heads += padding
+
+    input_char_ids = [i[:args.char_max_len] for i in input_char_ids]
+
+    input_char_ids = [i + [0] * (args.char_max_len-len(i)) for i in input_char_ids] + \
+        [[0] * args.char_max_len] * (args.bert_max_len - len(input_char_ids))
+
+    input_ids = torch.LongTensor(input_ids)
+    segment_ids = torch.LongTensor(segment_ids)
+    input_mask = torch.LongTensor(input_mask)
+    input_char_ids = torch.LongTensor(input_char_ids)
+    heads = torch.LongTensor(heads)
+
+    input_ids = input_ids.unsqueeze(0)
+    segment_ids = segment_ids.unsqueeze(0)
+    input_mask = input_mask.unsqueeze(0)
+    input_char_ids = input_char_ids.unsqueeze(0)
+    heads = heads.unsqueeze(0)
+
+    return input_ids, segment_ids, input_mask, input_char_ids, heads

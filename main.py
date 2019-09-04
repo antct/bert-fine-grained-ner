@@ -10,7 +10,7 @@ from torch.utils import data
 from torch.utils.tensorboard import SummaryWriter
 from model import BertNERNet
 from bert.optimization import BertAdam
-from util import CoNLLDataset, logger
+from util import CoNLLDataset, logger, CoNLLInput
 from config import args
 from metric import token_f, mention_f
 
@@ -147,6 +147,7 @@ if __name__ == "__main__":
     if args.mode == 'fine_tune':
         model_name = '{}/{}'.format(args.model_dir, args.model_path)
         model.load_state_dict(torch.load(model_name))
+        logger.info('load model from {}'.format(model_name))
 
         args.bert_freeze = False
 
@@ -196,8 +197,8 @@ if __name__ == "__main__":
             train(model, train_iter, optimizer, epoch)
             logger.info('==========epoch {} train end=========='.format(epoch))
             logger.info('==========epoch {} eval start=========='.format(epoch))
-            logger.info('train examples {}'.format(len(eval_iter.dataset)))
-            logger.info('train batch size {}'.format(args.batch_size))
+            logger.info('eval examples {}'.format(len(eval_iter.dataset)))
+            logger.info('eval batch size {}'.format(args.batch_size))
             evaluate(model, eval_iter, epoch)
             logger.info('==========epoch {} eval end=========='.format(epoch))
 
@@ -213,3 +214,13 @@ if __name__ == "__main__":
         logger.info('test examples {}'.format(len(test_iter.dataset)))
         logger.info('test batch size {}'.format(args.batch_size))
         evaluate(model, test_iter, 0)
+
+    if args.mode == 'trans':
+        model_name = '{}/{}'.format(args.model_dir, args.model_path)
+        model.load_state_dict(torch.load(model_name))
+        logger.info('load model from {}'.format(model_name))
+
+        model_name = "{}/best.pt".format(args.model_dir)
+        torch.save(model.module.state_dict(), model_name)
+        logger.info('save model to {}'.format(model_name))
+        

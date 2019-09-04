@@ -53,4 +53,5 @@ parser.add_argument("--attn_dropout", type=float, default=0.)
 parser.add_argument("--feat_dropout", type=float, default=.5)
 parser.add_argument("--rnn_dropout", type=float, default=.5)
 
+parser.add_argument("--crf_use_cuda", type=bool, default=True)
 args = parser.parse_args()

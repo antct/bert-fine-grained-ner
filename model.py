@@ -39,6 +39,7 @@ class BertNERNet(nn.Module):
 
         self.crf = CRF(
             target_size=len(VOCAB)+2,
+            use_cuda=args.crf_use_cuda
         )
 
         self.linear = nn.Linear(
@@ -56,7 +57,7 @@ class BertNERNet(nn.Module):
             p=args.feat_dropout
         )
 
-    def forward(self, input_ids, token_type_ids, attention_mask, input_char_ids, labels):
+    def forward(self, input_ids, token_type_ids, attention_mask, input_char_ids, labels=None):
         encoded_layers, _ = self.bert(
             input_ids=input_ids,
             token_type_ids=token_type_ids,
@@ -84,10 +85,12 @@ class BertNERNet(nn.Module):
             mask=attention_mask
         )
 
-        loss_value = self.crf.neg_log_likelihood_loss(
-            feats=crf_feats,
-            mask=attention_mask,
-            tags=labels
-        )
-
-        return path_score, best_path, loss_value
+        if labels is not None:
+            loss_value = self.crf.neg_log_likelihood_loss(
+                feats=crf_feats,
+                mask=attention_mask,
+                tags=labels
+            )
+            return path_score, best_path, loss_value
+        else:
+            return path_score, best_path
