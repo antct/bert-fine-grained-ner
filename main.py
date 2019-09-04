@@ -40,7 +40,6 @@ def train(model, iterator, optimizer, epoch):
             pass
 
 
-
 def evaluate(model, iterator, epoch):
     model.eval()
     all_heads, all_ys, all_ys_ = [], [], []
@@ -93,7 +92,6 @@ if __name__ == "__main__":
     if device_num > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-
     logger.info('model cuda & parallel')
     model = BertNERNet()
     if device == 'cuda':
@@ -127,18 +125,22 @@ if __name__ == "__main__":
         ]
 
         optimizer = optim.Adam(optimizer_grouped_parameters, lr=args.lr)
-        scheduler = lr_scheduler.StepLR(
-            optimizer, args.lr_decay_epochs, args.lr_decay_rate)
+        scheduler = lr_scheduler.StepLR(optimizer, args.lr_decay_epochs, args.lr_decay_rate)
 
         if not os.path.exists(args.model_dir):
             os.makedirs(args.model_dir)
 
         for epoch in range(1, args.num_epochs+1):
             logger.info('==========epoch {} train start=========='.format(epoch))
+            logger.info('train examples {}'.format(len(train_iter.dataset)))
+            logger.info('train batch size {}'.format(args.batch_size))
+            logger.info('train lr {}'.format(scheduler.get_lr()[0]))
             train(model, train_iter, optimizer, epoch)
             logger.info('==========epoch {} train end=========='.format(epoch))
             scheduler.step()
             logger.info('==========epoch {} eval start=========='.format(epoch))
+            logger.info('eval examples {}'.format(len(eval_iter.dataset)))
+            logger.info('eval batch size {}'.format(args.batch_size))
             evaluate(model, eval_iter, epoch)
             logger.info('==========epoch {} eval end=========='.format(epoch))
 
@@ -188,9 +190,14 @@ if __name__ == "__main__":
 
         for epoch in range(1, args.num_epochs+1):
             logger.info('==========epoch {} train start=========='.format(epoch))
+            logger.info('train examples {}'.format(len(train_iter.dataset)))
+            logger.info('train batch size {}'.format(args.batch_size))
+            logger.info('train lr {}'.format(optimizer.get_lr()[0]))
             train(model, train_iter, optimizer, epoch)
             logger.info('==========epoch {} train end=========='.format(epoch))
             logger.info('==========epoch {} eval start=========='.format(epoch))
+            logger.info('train examples {}'.format(len(eval_iter.dataset)))
+            logger.info('train batch size {}'.format(args.batch_size))
             evaluate(model, eval_iter, epoch)
             logger.info('==========epoch {} eval end=========='.format(epoch))
 
@@ -203,4 +210,6 @@ if __name__ == "__main__":
             shuffle=True,
             num_workers=args.num_workers
         )
+        logger.info('test examples {}'.format(len(test_iter.dataset)))
+        logger.info('test batch size {}'.format(args.batch_size))
         evaluate(model, test_iter, 0)

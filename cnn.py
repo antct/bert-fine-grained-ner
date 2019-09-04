@@ -31,7 +31,6 @@ class CharCNN(nn.Module):
         conv_outputs_max = [F.max_pool1d(i, i.size(2)).squeeze(2)
                             for i in conv_outputs]
         outputs = torch.cat(conv_outputs_max, 1)
-        # outputs = F.tanh(self.linear(outputs))
         outputs = F.leaky_relu(self.linear(outputs))
         outputs = outputs.view(batch_size, seq_len, self.output_size)
         return outputs

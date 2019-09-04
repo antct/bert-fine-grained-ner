@@ -26,7 +26,9 @@ class BertNERNet(nn.Module):
             num_dirs=args.rnn_num_dirs
         )
 
-        self.lstm_dropout = nn.Dropout(p=args.rnn_dropout)
+        self.lstm_dropout = nn.Dropout(
+            p=args.rnn_dropout
+        )
 
         self.cnn = CharCNN(
             embedding_num=len(CHAR_VOCAB),
@@ -39,7 +41,7 @@ class BertNERNet(nn.Module):
             target_size=len(VOCAB)+2,
         )
 
-        self.fc = nn.Linear(
+        self.linear = nn.Linear(
             in_features=args.rnn_hidden_size+args.cnn_output_size,
             out_features=len(VOCAB)+2
         )
@@ -49,8 +51,10 @@ class BertNERNet(nn.Module):
             num_heads=args.attn_num_heads,
             dropout=args.attn_dropout
         )
-        
-        self.feat_dropout = nn.Dropout(p=args.feat_dropout)
+
+        self.feat_dropout = nn.Dropout(
+            p=args.feat_dropout
+        )
 
     def forward(self, input_ids, token_type_ids, attention_mask, input_char_ids, labels):
         encoded_layers, _ = self.bert(
@@ -63,20 +67,27 @@ class BertNERNet(nn.Module):
         char_feats = self.cnn(input_char_ids)
 
         feats = torch.cat([bert_feats, char_feats], dim=2)
+
         feats = self.feat_dropout(feats)
+
+        # a simple way to get mask
         # mask = x.data.gt(0).float()
+
         lstm_feats = self.lstm(feats, attention_mask, False)
         lstm_feats, _ = self.attn(lstm_feats, lstm_feats, lstm_feats, None)
         lstm_feats = self.lstm_dropout(lstm_feats)
 
-        crf_feats = self.fc(lstm_feats)
+        crf_feats = self.linear(lstm_feats)
+
         path_score, best_path = self.crf(
             feats=crf_feats,
             mask=attention_mask
         )
+
         loss_value = self.crf.neg_log_likelihood_loss(
             feats=crf_feats,
             mask=attention_mask,
             tags=labels
         )
+
         return path_score, best_path, loss_value
