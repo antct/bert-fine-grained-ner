@@ -9,10 +9,12 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['GET'])
 def index():
     sent = request.args.get('sent')
-    input_ids, segment_ids, input_mask, input_char_ids, heads = CoNLLInput(sent)
+    input_ids, segment_ids, input_mask, input_char_ids, heads = CoNLLInput(
+        sent)
     model.eval()
     all_ys_, all_heads = [], []
     with torch.no_grad():
@@ -56,6 +58,7 @@ def index():
 
 
 if __name__ == "__main__":
+    # cpu version model
     device = 'cpu'
 
     args.batch_size = 1

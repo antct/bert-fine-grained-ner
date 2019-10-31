@@ -21,13 +21,9 @@ parser.add_argument("--model_path", type=str)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--num_workers", type=int, default=0)
 
-# parser.add_argument("--train_dataset", type=str, default="data/locationcrowd/train_version2.txt")
-# parser.add_argument("--eval_dataset", type=str, default="data/locationcrowd/dev.txt")
-# parser.add_argument("--test_dataset", type=str, default="data/locationcrowd/test.txt")
 parser.add_argument("--train_dataset", type=str, default="data/train.txt")
 parser.add_argument("--eval_dataset", type=str, default="data/dev.txt")
 parser.add_argument("--test_dataset", type=str, default="data/test.txt")
-
 
 parser.add_argument("--rnn_num_layers", type=int, default=2)
 parser.add_argument("--rnn_num_dirs", type=int, default=2)
@@ -54,4 +50,6 @@ parser.add_argument("--feat_dropout", type=float, default=.5)
 parser.add_argument("--rnn_dropout", type=float, default=.5)
 
 parser.add_argument("--crf_use_cuda", type=bool, default=True)
-args = parser.parse_args()
+# args = parser.parse_args()
+
+args, unknown = parser.parse_known_args()

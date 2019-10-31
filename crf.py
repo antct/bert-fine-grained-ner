@@ -54,11 +54,11 @@ class CRF(nn.Module):
             cur_partition = log_sum_exp(cur_values, tag_size)
             mask_idx = mask[idx, :].view(
                 batch_size, 1).expand(batch_size, tag_size)
-            masked_cur_partition = cur_partition.masked_select(mask_idx.bool())
+            masked_cur_partition = cur_partition.masked_select(mask_idx.byte())
             if masked_cur_partition.dim() != 0:
                 mask_idx = mask_idx.contiguous().view(batch_size, tag_size, 1)
                 partition.masked_scatter_(
-                    mask_idx.bool(), masked_cur_partition)
+                    mask_idx.byte(), masked_cur_partition)
         cur_values = self.transitions.view(1, tag_size, tag_size).expand(
             batch_size, tag_size, tag_size) + partition.contiguous().view(
                 batch_size, tag_size, 1).expand(batch_size, tag_size, tag_size)
@@ -85,7 +85,7 @@ class CRF(nn.Module):
         # record the position of the best score
         back_points = list()
         partition_history = list()
-        mask = (1 - mask.long()).bool()
+        mask = (1 - mask.long()).byte()
         try:
             _, inivalues = seq_iter.__next__()
         except:
@@ -182,7 +182,7 @@ class CRF(nn.Module):
     def neg_log_likelihood_loss(self, feats, mask, tags):
         # neg log likelihood loss
         batch_size = feats.size(0)
-        mask = mask.bool()
+        mask = mask.byte()
         forward_score, scores = self._forward_alg(feats, mask)
         gold_score = self._score_sentence(scores, mask, tags)
         if self.avg_batch:

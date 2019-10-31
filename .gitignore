@@ -122,3 +122,7 @@ summary/
 # run log
 run.log
 run.log*
+
+# gunicorn
+api_gunicorn.py
+gunicorn.py
