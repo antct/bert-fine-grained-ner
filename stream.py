@@ -19,15 +19,6 @@ monkey.patch_all()
 args.crf_use_cuda = True
 args.model_path = 'best.pt'
 
-nam = ['PERSON', 'NORP', 'FAC', 'ORG', 'GPE', 'LOC', 'PRODUCT', 'EVENT', 'WORK_OF_ART', 'LAW']
-
-
-def may_in(x, y): return x[0] >= y[0] and x[1] <= y[1]
-
-
-def may_same(x, y): return not (x[1] <= y[0] or x[0] >= y[1])
-
-
 class Model(ManagedModel):
 
     def init_model(self):
@@ -41,14 +32,7 @@ class Model(ManagedModel):
         spacy_list = [nlp(sent) for sent in sents]
         tokens_list = [[token.text for token in i] for i in spacy_list]
         indexs_list = [[token.idx for token in i] for i in spacy_list]
-        ners_list = [[[ent.start_char, ent.end_char]
-                      for ent in i.ents if ent.label_ in nam] for i in spacy_list]
 
-        # sents_list = [[[token.text, token.idx] for token in nlp(sent)] for sent in sents]
-
-        # ners_list = [[[ent.start_char, ent.end_char] for ent in nlp(sent).ents if ent.label_ in nam] for sent in sents]
-        # tokens_list = [[i[0] for i in sent] for sent in sents_list]
-        # indexs_list = [[i[1] for i in sent] for sent in sents_list]
         input_ids, segment_ids, input_mask, \
             input_char_ids, heads = CoNLLBatchInput(tokens_list)
         input_ids = input_ids.cuda()
@@ -81,67 +65,17 @@ class Model(ManagedModel):
 
             tokens = tokens_list[i]
             indexs = indexs_list[i]
-            ners = ners_list[i]
-            ners_flag = [0] * len(ners)
 
             locations = []
             for location_idx in location_idxs:
                 left, right = location_idx
                 start = indexs[left]
                 end = indexs[right-1] + len(tokens[right-1])
-                # base rule
-                # while not sent[i][end-1].isalpha():
-                #     end -= 1
-
-                # rule1
-                for j in range(len(ners)):
-                    if ners_flag[j] == 1:
-                        continue
-                    ner = ners[j]
-                    if may_in([start, end], ner):
-                        ners_flag[j] = 1
-                        # if there is '-' in ner result
-                        if sents[i][ner[0]:ner[1]].find('-') != -1:
-                            start = ner[0]
-                            end = ner[1]
-                            break
-                        # if there is 'the' or 'The' in ner result
-                        if sents[i][ner[0]:ner[1]].find('the') != -1 or sents[i][ner[0]:ner[1]].find('The') != -1:
-                            start = ner[0]
-                            end = ner[1]
-                            break
-
                 locations.append([start, end])
 
-            # rule2
-            # if there is 'the' or 'The' in ner result and not exists in location result
-            for j in range(len(ners)):
-                if ners_flag[j] == 1:
-                    continue
-                ner = ners[j]
-                if sents[i][ner[0]:ner[1]].find('the') != -1 or sents[i][ner[0]:ner[1]].find('The') != -1:
-                    locations.append(ner)
-
-            # rule3
-            remain_locations = []
-            for location in locations:
-                flag = False
-                for ner in ners:
-                    # may_in or may_same?
-                    if may_same(location, ner):
-                        flag = True
-                        remain_locations.append(location)
-                        break
-                if not flag:
-                    if not sents[i][location[0]:location[1]].islower() and len(sents[i][location[0]:location[1]]) > 1:
-                        remain_locations.append(location)
-
-            locations = sorted(remain_locations, key=lambda x: x[0])
+            locations = sorted(locations, key=lambda x: x[0])
 
             batch_locations.append(locations)
-
-            mention_ner = [sents[i][t[0]:t[1]] for t in ners]
-            mention_location = [sents[i][t[0]:t[1]] for t in locations]
 
         return batch_locations
 
