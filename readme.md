@@ -4,9 +4,7 @@ Named entity recognition using BERT under BiLSTM-CRF framework.
 
 ## network structure
 
-(BERT + CNN) + BiLSTM + Attention + CRF
-
-![](./network.png) 
+(BERT + CharCNN) + BiLSTM + Attention + CRF
 
 ## Production Env
 
