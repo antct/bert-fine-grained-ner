@@ -1,6 +1,6 @@
 # bert-fine-grained-ner
 
-Fine-grained Name Entity Recognition using BERT.
+Fine-grained Named Entity Recognition using BERT.
 
 ## network structure
 
