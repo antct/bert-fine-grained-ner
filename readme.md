@@ -8,13 +8,13 @@ er module: (BERT + CharCNN) + BiLSTM + Attention + CRF, only for entity recognit
 
 et module: (BERT + CharCNN) - (Mention Rep + Context Rep) - Fine-grained Types, for entity typing.
 
-## Production Env
+## production env
 
 `api.py` provide a simple flask api for model inference using cpu.
 
 `stream.py` provide a multi-gpu way for inference with the help of [ShannonAI/service-streamer](https://github.com/ShannonAI/service-streamer).
 
-## Dir Tree
+## dir tree
 
 er module: 
 
